@@ -6,10 +6,11 @@ import { Post } from './entities/post.entity';
 import { Repository } from 'typeorm';
 import { Mart } from 'src/marts/entities/mart.entity';
 import { Image } from './entities/image.entity';
+import { AwsService } from 'src/aws/aws.service';
 
 @Injectable()
 export class PostsService {
-  // 구조 선언?
+  // 구조 선언
   constructor(
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
@@ -17,7 +18,22 @@ export class PostsService {
     private readonly imageRepository: Repository<Image>,
     @InjectRepository(Mart)
     private readonly martRepository: Repository<Mart>,
+    private readonly awsService: AwsService,
   ) {}
+
+  async saveImage(file: Express.Multer.File, postId: number) {
+    // 1. S3에 이미지 업로드
+    const key = `posts/${postId}/${Date.now()}_${file.originalname}`;
+    const imageUrl = await this.awsService.uploadFile(key, file.buffer);
+
+    // 2. 이미지 정보 DB 저장
+    const image = this.imageRepository.create({
+      url: imageUrl,
+      post: { id: postId }
+    });
+
+    return await this.imageRepository.save(image);
+  }
 
   async create(createPostDto: CreatePostDto): Promise<Post> {
     const mart = await this.martRepository.findOne({
@@ -30,6 +46,8 @@ export class PostsService {
 
     const post = this.postRepository.create({
       mart,
+      startDate: createPostDto.startDate,
+      endDate: createPostDto.endDate
     });
 
     const savedPost = await this.postRepository.save(post);

@@ -7,10 +7,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { Post } from './posts/entities/post.entity';
 import { Mart } from './marts/entities/mart.entity';
+import { AwsModule } from './aws/aws.module';
+import { AwsService } from './aws/aws.service';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true }), // 전역으로 사용할 수 있도록 설정
     TypeOrmModule.forRoot({
       type: 'mariadb',
       host: 'localhost',
@@ -24,8 +26,9 @@ import { Mart } from './marts/entities/mart.entity';
     }),
     MartsModule,
     PostsModule,
+    AwsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, AwsService],
 })
 export class AppModule {}

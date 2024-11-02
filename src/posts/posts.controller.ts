@@ -6,14 +6,26 @@ import {
   Patch,
   Param,
   Delete,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
+
+  @Post(':id/images')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadImage(
+    @Param('id') postId: number,
+    @UploadedFile() file: Express.Multer.File
+  ) {
+    return await this.postsService.saveImage(file, postId);
+  }
 
   @Post()
   async create(@Body() createPostDto: CreatePostDto) {

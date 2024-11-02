@@ -3,6 +3,14 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // CORS 설정
+  app.enableCors({
+    origin: 'http://localhost:5173', // 클라이언트의 도메인 또는 '*' (모든 도메인 허용)
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
+
   await app.listen(3000);
 }
 bootstrap();

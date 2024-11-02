@@ -1,4 +1,5 @@
 import { IsString } from 'class-validator';
+import { Column } from 'typeorm';
 
 export class CreateMartDto {
   @IsString()
@@ -18,6 +19,9 @@ export class CreateMartDto {
 
   @IsString()
   description: string; // 비고
+
+  @Column('simple-array')
+  files: string[];
 
   readonly status: string = '1'; // 기본 값으로 '1' 설정
 }

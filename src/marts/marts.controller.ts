@@ -10,12 +10,15 @@ import {
   HttpCode,
   HttpStatus,
   NotFoundException,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { MartsService } from './marts.service';
 import { CreateMartDto } from './dto/create-mart.dto';
 import { UpdateMartDto } from './dto/update-mart.dto';
 import { Mart } from './entities/mart.entity';
 import { MartsResponse } from './dto/marts.response.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('marts')
 export class MartsController {
@@ -23,8 +26,17 @@ export class MartsController {
 
   // 마트 생성
   @Post()
-  create(@Body() createMartDto: CreateMartDto) {
-    return this.martsService.create(createMartDto);
+  @UseInterceptors(FilesInterceptor('files'))
+  create(
+    @Body() createMartDto: CreateMartDto,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+  ) {
+    const fileUrls = files.map((file) => `/uploads/${file.filename}`); // 예: 파일 저장 경로 배열
+
+    // DTO에 파일 경로 배열 추가
+    const martData = { ...createMartDto, files: fileUrls };
+
+    return this.martsService.create(martData);
   }
 
   // 리스트 조회

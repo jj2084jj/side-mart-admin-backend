@@ -40,6 +40,9 @@ export class Mart {
   @UpdateDateColumn()
   updatedDate: Date; // 생성일
 
+  @Column('simple-array')
+  files: string[];
+
   // 포스트 정보
   @OneToMany(() => Post, (post) => post.mart)
   posts: Post[];

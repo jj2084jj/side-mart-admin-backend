@@ -17,6 +17,7 @@ export class AppService {
       homepage: '홈페이지',
       hours: 'ㅇㅇ',
       description: '',
+      files:[],
       createdDate: new Date(), // 현재 시간을 설정
       updatedDate: new Date(),
     };

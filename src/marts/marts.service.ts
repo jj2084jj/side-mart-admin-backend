@@ -19,6 +19,7 @@ export class MartsService {
       ...createMartDto,
       status: '1', // 고정된 값으로 설정
     });
+
     return this.martRepository.save(mart);
   }
 
