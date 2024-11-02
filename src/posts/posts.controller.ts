@@ -34,11 +34,6 @@ export class PostsController {
     return this.postsService.create(createPostDto);
   }
 
-  @Get('mart/:martId')
-  async findAll(@Param('martId') martId: number) {
-    return this.postsService.findAll(martId);
-  }
-  
   // 게시글 단일 조회
   @Get(':id')
   findOne(@Param('id') id: string) {

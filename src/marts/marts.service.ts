@@ -48,7 +48,7 @@ export class MartsService {
       where: {
         mart: { id: id }
       },
-      relations: ['images', 'mart'], // 관련 데이터도 함께 로드
+      relations: ['images'], // 관련 데이터도 함께 로드
       order: {
         createdDate: 'DESC' // 최신순 정렬
       }
