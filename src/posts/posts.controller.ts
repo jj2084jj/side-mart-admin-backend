@@ -8,11 +8,13 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('posts')
 export class PostsController {
@@ -30,8 +32,17 @@ export class PostsController {
 
   // 게시글 생성
   @Post()
-  async create(@Body() createPostDto: CreatePostDto) {
-    return this.postsService.create(createPostDto);
+  @UseInterceptors(FilesInterceptor('images'))
+  async create(
+    @Body() createPostDto: CreatePostDto,
+    @UploadedFiles() files: Express.Multer.File[]
+  ) {
+    try {
+      return await this.postsService.create(createPostDto, files);
+    } catch (error) {
+      console.error('Post creation error:', error);
+      throw new InternalServerErrorException(error.message);
+    }
   }
 
   // 게시글 단일 조회

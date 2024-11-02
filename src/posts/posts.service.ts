@@ -35,35 +35,44 @@ export class PostsService {
     return await this.imageRepository.save(image);
   }
 
-  async create(createPostDto: CreatePostDto): Promise<Post> {
-    const mart = await this.martRepository.findOne({
-      where: { id: createPostDto.martId },
-    });
-
-    if (!mart) {
-      throw new NotFoundException(`마트 정보 오류`);
-    }
-
-    const post = this.postRepository.create({
-      mart,
-      startDate: createPostDto.startDate,
-      endDate: createPostDto.endDate
-    });
-
-    const savedPost = await this.postRepository.save(post);
-
-    // 이미지 생성
-    const images = createPostDto.images.map((imageDto) => {
-      const image = this.imageRepository.create({
-        url: imageDto.url,
-        post: savedPost,
+  async create(createPostDto: CreatePostDto, files: Express.Multer.File[]): Promise<Post> {
+    try {
+      const mart = await this.martRepository.findOne({
+        where: { id: createPostDto.martId },
       });
-      return image;
-    });
 
-    await this.imageRepository.save(images);
+      if (!mart) {
+        throw new NotFoundException(`Mart with ID ${createPostDto.martId} not found`);
+      }
 
-    return savedPost;
+      // 1. Post 생성
+      const post = this.postRepository.create({
+        mart,
+        startDate: createPostDto.startDate,
+        endDate: createPostDto.endDate
+      });
+
+      const savedPost = await this.postRepository.save(post);
+
+      // 2. 이미지 업로드 및 저장
+      if (files && files.length > 0) {
+        const uploadPromises = files.map(async (file) => {
+          const uploadResult = await this.awsService.uploadFile(file);
+          const image = this.imageRepository.create({
+            url: uploadResult.url,
+            post: savedPost
+          });
+          return this.imageRepository.save(image);
+        });
+
+        await Promise.all(uploadPromises);
+      }
+
+      return savedPost;
+    } catch (error) {
+      console.error('Service error:', error);
+      throw error;
+    }
   }
 
   async findAll(martId: number) {
