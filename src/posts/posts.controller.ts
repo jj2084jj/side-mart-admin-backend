@@ -18,6 +18,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
+  // 이미지 업로드
   @Post(':id/images')
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(
@@ -27,16 +28,18 @@ export class PostsController {
     return await this.postsService.saveImage(file, postId);
   }
 
+  // 게시글 생성
   @Post()
   async create(@Body() createPostDto: CreatePostDto) {
     return this.postsService.create(createPostDto);
   }
 
-  @Get()
-  findAll() {
-    return this.postsService.findAll();
+  @Get('mart/:martId')
+  async findAll(@Param('martId') martId: number) {
+    return this.postsService.findAll(martId);
   }
-
+  
+  // 게시글 단일 조회
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.postsService.findOne(+id);

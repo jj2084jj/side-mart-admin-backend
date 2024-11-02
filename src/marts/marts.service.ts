@@ -4,6 +4,7 @@ import { UpdateMartDto } from './dto/update-mart.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Mart } from './entities/mart.entity';
 import { Repository } from 'typeorm';
+import { Post } from 'src/posts/entities/post.entity';
 
 @Injectable()
 export class MartsService {
@@ -12,6 +13,10 @@ export class MartsService {
     // 마트 구조 반환
     @InjectRepository(Mart)
     private readonly martRepository: Repository<Mart>,
+
+    // 게시글 구조 반환
+    @InjectRepository(Post)
+    private readonly postRepository: Repository<Post>,
   ) {}
 
   async create(createMartDto: CreateMartDto): Promise<Mart> {
@@ -39,11 +44,21 @@ export class MartsService {
       where: { id },
     });
 
+    const posts = await this.postRepository.find({
+      where: {
+        mart: { id: id }
+      },
+      relations: ['images', 'mart'], // 관련 데이터도 함께 로드
+      order: {
+        createdDate: 'DESC' // 최신순 정렬
+      }
+    });
+
     if (!mart) {
       throw new NotFoundException(`Mart with ID ${id} not found`);
     }
 
-    return mart;
+    return { ...mart, posts:posts };
   }
 
   async update(id: number, updateMartDto: UpdateMartDto): Promise<Mart> {

@@ -1,42 +1,41 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { v4 as uuidv4 } from 'uuid';
+import * as AWS from 'aws-sdk';
 
 @Injectable()
 export class AwsService {
-  private s3Client: S3Client;
-  private bucketName: string;
-  private baseUrl: string;
+  private readonly s3: AWS.S3;
 
-  constructor(private configService: ConfigService) {
-    this.bucketName = this.configService.get<string>('AWS_S3_BUCKET_NAME');
-    this.baseUrl = this.configService.get<string>('AWS_S3_BASE_URL');
-
-    this.s3Client = new S3Client({
-      region: this.configService.get<string>('AWS_REGION'),
-      credentials: {
-        accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID'),
-        secretAccessKey: this.configService.get<string>(
-          'AWS_SECRET_ACCESS_KEY',
-        ),
-      },
+  constructor() {
+    this.s3 = new AWS.S3({
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      region: process.env.AWS_REGION,
     });
   }
 
-  async uploadFile(key: string, body: Buffer | Uint8Array | Blob | string) {
-    const command = new PutObjectCommand({
-      Bucket: this.bucketName,
+  async uploadFile(file: Express.Multer.File) {
+    // 파일 확장자 추출
+    const fileExt = file.originalname.split('.').pop();
+    // UUID로 유니크한 파일명 생성
+    const key = `${uuidv4()}.${fileExt}`;
+
+    const params = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
       Key: key,
-      Body: body,
-    });
+      Body: file.buffer,
+      ContentType: file.mimetype,
+    };
 
     try {
-      await this.s3Client.send(command);
-      console.log(`${this.baseUrl}/${key}`,'!!!! aws 파일 추가')
-      return `${this.baseUrl}/${key}`; // 업로드된 파일의 URL 반환
+      const result = await this.s3.upload(params).promise();
+      return {
+        key: result.Key,
+        url: result.Location,
+        success: true
+      };
     } catch (error) {
-      console.error('Error uploading file:', error);
-      throw error;
+      throw new Error(`Failed to upload file to S3: ${error.message}`);
     }
   }
 }

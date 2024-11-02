@@ -23,12 +23,12 @@ export class PostsService {
 
   async saveImage(file: Express.Multer.File, postId: number) {
     // 1. S3에 이미지 업로드
-    const key = `posts/${postId}/${Date.now()}_${file.originalname}`;
-    const imageUrl = await this.awsService.uploadFile(key, file.buffer);
+    
+    const imageResult = await this.awsService.uploadFile(file);
 
     // 2. 이미지 정보 DB 저장
     const image = this.imageRepository.create({
-      url: imageUrl,
+      url: imageResult.url,
       post: { id: postId }
     });
 
@@ -66,8 +66,16 @@ export class PostsService {
     return savedPost;
   }
 
-  findAll() {
-    return `This action returns all posts`;
+  async findAll(martId: number) {
+    return this.postRepository.find({
+      where: {
+        mart: { id: martId }
+      },
+      relations: ['images', 'mart'], // 관련 데이터도 함께 로드
+      order: {
+        createdDate: 'DESC' // 최신순 정렬
+      }
+    });
   }
 
   findOne(id: number) {

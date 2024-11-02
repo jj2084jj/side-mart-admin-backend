@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AwsService } from './aws.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Controller('aws')
 export class AwsController {
@@ -15,25 +16,16 @@ export class AwsController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
+    const fileKey = uuidv4();
     if (!file) {
       throw new BadRequestException('파일이 없습니다.');
     }
 
     try {
-      const key = `images/${Date.now()}_${file.originalname}`;
-      const imageUrl = await this.awsService.uploadFile(key, file.buffer);
-      
-      return {
-        success: true,
-        imageUrl,
-        key
-      };
+      const result = await this.awsService.uploadFile(file);
+      return result;
     } catch (error) {
-      return {
-        success: false,
-        message: '이미지 업로드에 실패했습니다.',
-        error: error.message,
-      };
+      throw new BadRequestException(error.message);
     }
   }
 }
