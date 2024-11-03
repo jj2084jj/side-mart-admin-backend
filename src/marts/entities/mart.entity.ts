@@ -40,7 +40,7 @@ export class Mart {
   @UpdateDateColumn()
   updatedDate: Date; // 생성일
 
-  @Column('simple-array')
+  @Column('simple-array',{ nullable: true })
   files: string[];
 
   // 포스트 정보
