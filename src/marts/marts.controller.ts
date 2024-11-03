@@ -106,10 +106,22 @@ export class MartsController {
   @HttpCode(HttpStatus.OK) // HTTP 상태 코드를 200으로 설정
   async delete(@Param('id') id: number): Promise<{ message: string }> {
     try {
+      // 마트가 존재하는지 먼저 확인
+      const mart = await this.martsService.findOne(id);
+      if (!mart) {
+        throw new NotFoundException(`마트 ID ${id}를 찾을 수 없습니다.`);
+      }
+
       await this.martsService.delete(id);
       return { message: `success` };
     } catch (error) {
-      throw new NotFoundException(`삭제에 실패하였습니다. 다시 확인해주세요.`);
+      // 구체적인 에러 메시지 전달
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new NotFoundException(
+        `삭제 중 오류가 발생했습니다: ${error.message}`,
+      );
     }
   }
 }

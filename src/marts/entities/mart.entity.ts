@@ -44,6 +44,8 @@ export class Mart {
   files: string[];
 
   // 포스트 정보
-  @OneToMany(() => Post, (post) => post.mart)
+  @OneToMany(() => Post, (post) => post.mart, {
+    onDelete: 'CASCADE'  // 마트 삭제시 포스트도 삭제
+  })
   posts: Post[];
 }

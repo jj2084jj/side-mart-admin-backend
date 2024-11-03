@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Mart } from './entities/mart.entity';
 import { Repository } from 'typeorm';
 import { Post } from 'src/posts/entities/post.entity';
+import { Image } from 'src/posts/entities/image.entity';
 
 @Injectable()
 export class MartsService {
@@ -17,6 +18,9 @@ export class MartsService {
     // 게시글 구조 반환
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
+
+    @InjectRepository(Image)
+    private readonly imageRepository: Repository<Image>,
   ) {}
 
   async create(createMartDto: CreateMartDto): Promise<Mart> {
@@ -87,9 +91,18 @@ export class MartsService {
   }
 
   async delete(id: number): Promise<void> {
-    const result = await this.martRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`해당하는 마트 ${id}값이 존재하지 않습니다.`);
+    try {
+      await this.imageRepository.delete({ post: { mart: { id } } });
+
+      await this.postRepository.delete({ mart: { id } });
+
+      const result = await this.martRepository.delete(id);
+      if (result.affected === 0) {
+        throw new NotFoundException(`해당하는 마트 ${id}값이 존재하지 않습니다.`);
+      }
+    } catch (error) {
+      console.log('마트 삭제 실패:', error);
+      throw error;
     }
   }
 }

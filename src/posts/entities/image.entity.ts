@@ -9,6 +9,8 @@ export class Image {
   @Column()
   url: string; // 이미지 URL
 
-  @ManyToOne(() => Post, (post) => post.images)
+  @ManyToOne(() => Post, (post) => post.images, {
+    onDelete: 'CASCADE'
+  })
   post: Post; // 포스트와 연결
 }

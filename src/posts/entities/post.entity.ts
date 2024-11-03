@@ -15,7 +15,9 @@ export class Post {
   @PrimaryGeneratedColumn()
   id: number; // post 고유 id
 
-  @ManyToOne(() => Mart, (mart) => mart.posts)
+  @ManyToOne(() => Mart, (mart) => mart.posts, {
+    onDelete: 'CASCADE'
+  })
   mart: Mart; // 마트와 연결
 
   @Column()
@@ -24,7 +26,9 @@ export class Post {
   @Column()
   endDate: string; // 전단 종료날짜
 
-  @OneToMany(() => Image, (image) => image.post)
+  @OneToMany(() => Image, (image) => image.post, {
+    onDelete: 'CASCADE'
+  })
   images: Image[]; // 이미지 배열
 
   @CreateDateColumn()
