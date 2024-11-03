@@ -31,7 +31,10 @@ export class MartsController {
     @Body() createMartDto: CreateMartDto,
     @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
-    const fileUrls = files.map((file) => `/uploads/${file.filename}`); // 예: 파일 저장 경로 배열
+    // 추후 다시 처리 예정
+    const fileUrls = files
+      ? files.length > 0 && files.map((file) => `/uploads/${file.filename}`)
+      : []; // 예: 파일 저장 경로 배열
 
     // DTO에 파일 경로 배열 추가
     const martData = { ...createMartDto, files: fileUrls };
