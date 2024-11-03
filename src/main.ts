@@ -6,7 +6,7 @@ async function bootstrap() {
 
   // CORS 설정
   app.enableCors({
-    origin: ['http://localhost:5173', 'https://port-0-everyone-flyer-server-ac2nll4pdh1j.sel4.cloudtype.app'], // 로컬 및 원격 서버 도메인 허용
+    origin: ['http://localhost:5173', 'https://port-0-everyone-flyer-m31e80fff0b193b7.sel4.cloudtype.app'], // 로컬 및 원격 서버 도메인 허용
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
