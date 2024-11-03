@@ -9,20 +9,22 @@ import { Post } from './posts/entities/post.entity';
 import { Mart } from './marts/entities/mart.entity';
 import { AwsModule } from './aws/aws.module';
 import { AwsService } from './aws/aws.service';
+import { Image } from './posts/entities/image.entity';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }), // 전역으로 사용할 수 있도록 설정
     TypeOrmModule.forRoot({
       type: 'mariadb',
-      host: 'localhost',
-      port: 3306,
-      username: 'root',
-      password: 'Jin&Jo1125',
-      database: 'martdb',
-      entities: [Mart, Post], // 엔티티 클래스 배열
-      synchronize: true, // 개발환경에서만 사용
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT, 10),
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DATABASE,
+      entities: [Mart, Post,Image], // 엔티티 클래스 배열
+      // synchronize: true, // 개발환경에서만 사용
       autoLoadEntities: true, // 엔티티 자동 로드
+      connectTimeout: 10000,
     }),
     MartsModule,
     PostsModule,
