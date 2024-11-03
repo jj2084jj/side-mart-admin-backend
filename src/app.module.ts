@@ -22,7 +22,7 @@ import { Image } from './posts/entities/image.entity';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
       entities: [Mart, Post,Image], // 엔티티 클래스 배열
-      // synchronize: true, // 개발환경에서만 사용
+      synchronize: true, // 개발환경에서만 사용
       autoLoadEntities: true, // 엔티티 자동 로드
       connectTimeout: 10000,
     }),
