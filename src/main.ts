@@ -9,7 +9,7 @@ async function bootstrap() {
     origin: [
       'http://localhost:5173',
       'https://port-0-everyone-flyer-m31e80fff0b193b7.sel4.cloudtype.app',
-      'https://mart-mon.netlify.app/',
+      'https://mart-mon.netlify.app',
     ], // 로컬 및 원격 서버 도메인 허용
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
