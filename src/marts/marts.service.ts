@@ -91,12 +91,20 @@ export class MartsService {
     });
 
     if (!mart) {
-      throw new NotFoundException(`Mart with ID ${id} not found`);
+      throw new NotFoundException(
+        `해당하는 마트가 존재하지 않습니다. id: ${id}`,
+      );
     }
 
     return { ...mart, posts: posts };
   }
 
+  /**
+   * 마트 기본정보 변경
+   * @param id
+   * @param updateMartDto
+   * @returns
+   */
   async update(id: number, updateMartDto: UpdateMartDto): Promise<Mart> {
     const mart = await this.martRepository.preload({
       id,
@@ -104,16 +112,26 @@ export class MartsService {
     });
 
     if (!mart) {
-      throw new NotFoundException(`Mart with ID ${id} not found`);
+      throw new NotFoundException(
+        `해당하는 마트가 존재하지 않습니다. id: ${id}`,
+      );
     }
 
     return this.martRepository.save(mart);
   }
 
+  /**
+   * 마트 활성상태 변경
+   * @param id
+   * @param status
+   * @returns
+   */
   async updateStatus(id: number, status: string): Promise<{ message: string }> {
     const mart = await this.martRepository.findOne({ where: { id } });
     if (!mart) {
-      throw new NotFoundException(`Mart with ID ${id} not found`);
+      throw new NotFoundException(
+        `해당하는 마트가 존재하지 않습니다. id: ${id}`,
+      );
     }
 
     mart.status = status; // 상태 업데이트
@@ -122,16 +140,20 @@ export class MartsService {
     return { message: 'success' };
   }
 
-  async delete(id: number): Promise<void> {
+  /**
+   * 마트 삭제
+   * @param martId
+   */
+  async delete(martId: number): Promise<void> {
     try {
-      await this.imageRepository.delete({ martId: id });
+      await this.imageRepository.delete({ martId });
 
-      await this.postRepository.delete({ mart: { id } });
+      await this.postRepository.delete({ mart: { id: martId } });
 
-      const result = await this.martRepository.delete(id);
+      const result = await this.martRepository.delete(martId);
       if (result.affected === 0) {
         throw new NotFoundException(
-          `해당하는 마트 ${id}값이 존재하지 않습니다.`,
+          `해당하는 마트 ${martId}값이 존재하지 않습니다.`,
         );
       }
     } catch (error) {

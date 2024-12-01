@@ -10,6 +10,7 @@ import {
   UploadedFile,
   UploadedFiles,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -31,7 +32,7 @@ export class PostsController {
   }
 
   /**
-   * 이미지 업로드
+   * 포스트 이미지 개별 업로드
    * @param postId
    * @param file
    * @returns
@@ -65,13 +66,49 @@ export class PostsController {
     }
   }
 
+  /**
+   * 포스트 정보 업데이트
+   * @param id
+   * @param updatePostDto
+   * @returns
+   */
   @Patch(':id')
-  update(@Param('id') id: number, @Body() updatePostDto: UpdatePostDto) {
-    return this.postsService.update(+id, updatePostDto);
+  async update(
+    @Param('id') id: number,
+    @Body() updatePostDto: UpdatePostDto,
+  ): Promise<{ message: string }> {
+    try {
+      await this.postsService.update(id, updatePostDto);
+      return {
+        message: `success`,
+      };
+    } catch (error) {
+      throw new NotFoundException('업데이트에 실패했습니다.');
+    }
   }
 
+  /**
+   * 포스트 개별 삭제
+   * @param id
+   * @returns
+   */
   @Delete(':id')
-  remove(@Param('id') id: number) {
-    return this.postsService.remove(+id);
+  async delete(@Param('id') id: number) {
+    try {
+      // 포스트 존재 확인
+      const post = await this.postsService.findOne(id);
+      if (!post) {
+        throw new NotFoundException(`포스트 ID ${id}를 찾을 수 없습니다.`);
+      }
+      this.postsService.delete(id);
+      return { message: `success` };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new NotFoundException(
+        `포스트 삭제 중 오류가 발생했습니다: ${error.message}`,
+      );
+    }
   }
 }

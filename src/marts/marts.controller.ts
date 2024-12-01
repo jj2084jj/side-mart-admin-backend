@@ -61,7 +61,12 @@ export class MartsController {
     return this.martsService.findOne(id);
   }
 
-  // 업데이트
+  /**
+   * 마트정보 업데이트
+   * @param id
+   * @param updateMartDto
+   * @returns
+   */
   @Patch(':id')
   @HttpCode(HttpStatus.OK) // HTTP 상태 코드를 200으로 설정
   async update(

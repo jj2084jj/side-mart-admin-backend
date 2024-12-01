@@ -108,7 +108,7 @@ export class PostsService {
   }
 
   /**
-   * postid 개별조회
+   * 포스트 개별조회
    * @param postId
    * @returns
    */
@@ -129,16 +129,41 @@ export class PostsService {
   }
 
   /**
-   *
+   * 포스트 업데이트
    * @param id 전단 id
    * @param updatePostDto 업데이트 정보
    * @returns
    */
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
+  async update(id: number, updatePostDto: UpdatePostDto) {
+    const post = await this.postRepository.preload({
+      id,
+      ...updatePostDto,
+    });
+
+    if (!post) {
+      throw new NotFoundException(
+        `해당하는 포스트가 존재하지 않습니다. id: ${id}`,
+      );
+    }
+
+    return this.martRepository.save(post);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+  /**
+   * 포스트 삭제
+   * @param postId
+   */
+  async delete(postId: number) {
+    try {
+      await this.imageRepository.delete({ postId });
+
+      const result = await this.postRepository.delete(postId);
+      if (result.affected === 0) {
+        throw new NotFoundException(`해당하는 포스트 값이 존재하지 않습니다.`);
+      }
+    } catch (error) {
+      console.log('포스트 삭제 실패:', error);
+      throw error;
+    }
   }
 }
