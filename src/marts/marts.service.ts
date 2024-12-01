@@ -3,7 +3,7 @@ import { CreateMartDto } from './dto/create-mart.dto';
 import { UpdateMartDto } from './dto/update-mart.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Mart } from './entities/mart.entity';
-import { Repository } from 'typeorm';
+import { MoreThanOrEqual, Repository } from 'typeorm';
 import { Post } from 'src/posts/entities/post.entity';
 import { AwsService } from 'src/aws/aws.service';
 import { Image } from 'src/aws/entities/image.entity';
@@ -60,6 +60,12 @@ export class MartsService {
     }
   }
 
+  /**
+   * 마트리스트 전체조회
+   * @param page 페이지 정보
+   * @param pageSize 보여줄 총 페이지 정의
+   * @returns
+   */
   async findAll(
     page: number = 1,
     pageSize: number = 10,
@@ -72,6 +78,11 @@ export class MartsService {
     return { result, total };
   }
 
+  /**
+   * 마트 단일조회
+   * @param id
+   * @returns
+   */
   async findOne(id: number): Promise<Mart> {
     const mart = await this.martRepository.findOne({
       where: { id },
@@ -80,7 +91,7 @@ export class MartsService {
       },
     });
 
-    const posts = await this.postRepository.find({
+    let posts = await this.postRepository.find({
       where: {
         mart: { id: id },
       },
@@ -88,6 +99,13 @@ export class MartsService {
       order: {
         createdDate: 'DESC', // 최신순 정렬
       },
+    });
+
+    // endDate가 현재 날짜 이후인 항목만 필터링
+    const currentDate = new Date();
+    posts = posts.filter((post) => {
+      const endDate = post.endDate ? new Date(post.endDate) : null;
+      return !endDate || endDate >= currentDate;
     });
 
     if (!mart) {
