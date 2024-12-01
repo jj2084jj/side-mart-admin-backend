@@ -27,7 +27,8 @@ describe('AppController', () => {
         hours: 'ㅇㅇ',
         posts: [],
         description: '',
-        files:[],
+        images: [],
+        logoColorCode: '', // 추가
         createdDate: new Date(), // 수정된 날짜 객체
         updatedDate: new Date(), // 수정된 날짜 객체
       };

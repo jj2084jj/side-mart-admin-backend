@@ -17,7 +17,7 @@ export class AwsService {
 
   async uploadFile(file: Express.Multer.File) {
     const key = `images/${Date.now()}_${file.originalname}`;
-    
+
     const command = new PutObjectCommand({
       Bucket: process.env.AWS_S3_BUCKET_NAME,
       Key: key,

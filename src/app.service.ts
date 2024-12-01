@@ -17,7 +17,8 @@ export class AppService {
       homepage: '홈페이지',
       hours: 'ㅇㅇ',
       description: '',
-      files:[],
+      images: [],
+      logoColorCode: null, // 추가
       createdDate: new Date(), // 현재 시간을 설정
       updatedDate: new Date(),
     };

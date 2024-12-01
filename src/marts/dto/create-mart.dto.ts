@@ -1,5 +1,4 @@
-import { IsString } from 'class-validator';
-import { Column } from 'typeorm';
+import { IsString, IsOptional } from 'class-validator';
 
 export class CreateMartDto {
   @IsString()
@@ -12,16 +11,19 @@ export class CreateMartDto {
   closed: string; // 휴무일
 
   @IsString()
+  @IsOptional()
   homepage: string; // 홈페이지
 
   @IsString()
   hours: string; // 영업시간
 
   @IsString()
+  @IsOptional()
   description: string; // 비고
 
-  @Column('simple-array')
-  files: string[];
+  @IsString()
+  @IsOptional()
+  logoColorCode: string; // 로고 컬러 코드
 
   readonly status: string = '1'; // 기본 값으로 '1' 설정
 }

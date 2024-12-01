@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from './entities/post.entity';
 import { Repository } from 'typeorm';
 import { Mart } from 'src/marts/entities/mart.entity';
-import { Image } from './entities/image.entity';
+import { Image } from '../aws/entities/image.entity';
 import { AwsService } from 'src/aws/aws.service';
 
 @Injectable()
@@ -23,33 +23,38 @@ export class PostsService {
 
   async saveImage(file: Express.Multer.File, postId: number) {
     // 1. S3에 이미지 업로드
-    
+
     const imageResult = await this.awsService.uploadFile(file);
 
     // 2. 이미지 정보 DB 저장
     const image = this.imageRepository.create({
       url: imageResult.url,
-      post: { id: postId }
+      postId: postId,
     });
 
     return await this.imageRepository.save(image);
   }
 
-  async create(createPostDto: CreatePostDto, files: Express.Multer.File[]): Promise<Post> {
+  async create(
+    createPostDto: CreatePostDto,
+    files: Express.Multer.File[],
+  ): Promise<Post> {
     try {
       const mart = await this.martRepository.findOne({
         where: { id: createPostDto.martId },
       });
 
       if (!mart) {
-        throw new NotFoundException(`Mart with ID ${createPostDto.martId} not found`);
+        throw new NotFoundException(
+          `Mart with ID ${createPostDto.martId} not found`,
+        );
       }
 
       // 1. Post 생성
       const post = this.postRepository.create({
         mart,
         startDate: createPostDto.startDate,
-        endDate: createPostDto.endDate
+        endDate: createPostDto.endDate,
       });
 
       const savedPost = await this.postRepository.save(post);
@@ -60,7 +65,7 @@ export class PostsService {
           const uploadResult = await this.awsService.uploadFile(file);
           const image = this.imageRepository.create({
             url: uploadResult.url,
-            post: savedPost
+            postId: savedPost.id,
           });
           return this.imageRepository.save(image);
         });
@@ -78,12 +83,12 @@ export class PostsService {
   async findAll(martId: number) {
     return this.postRepository.find({
       where: {
-        mart: { id: martId }
+        mart: { id: martId },
       },
       relations: ['images', 'mart'], // 관련 데이터도 함께 로드
       order: {
-        createdDate: 'DESC' // 최신순 정렬
-      }
+        createdDate: 'DESC', // 최신순 정렬
+      },
     });
   }
 

@@ -1,3 +1,4 @@
+import { Image } from 'src/aws/entities/image.entity';
 import { Post } from 'src/posts/entities/post.entity';
 import {
   Column,
@@ -40,12 +41,17 @@ export class Mart {
   @UpdateDateColumn()
   updatedDate: Date; // 생성일
 
-  @Column('simple-array',{ nullable: true })
-  files: string[];
+  @OneToMany(() => Image, (image) => image.martId, {
+    onDelete: 'CASCADE',
+  })
+  images: Image[]; // 이미지 배열
 
   // 포스트 정보
-  @OneToMany(() => Post, (post) => post.mart, {
-    onDelete: 'CASCADE'  // 마트 삭제시 포스트도 삭제
+  @OneToMany(() => Post, (post) => post.id, {
+    onDelete: 'CASCADE', // 마트 삭제시 포스트도 삭제
   })
   posts: Post[];
+
+  @Column({ nullable: true })
+  logoColorCode: string; // 로고 컬러 코드
 }

@@ -9,22 +9,30 @@ import { Post } from './posts/entities/post.entity';
 import { Mart } from './marts/entities/mart.entity';
 import { AwsModule } from './aws/aws.module';
 import { AwsService } from './aws/aws.service';
-import { Image } from './posts/entities/image.entity';
+import { Image } from './aws/entities/image.entity';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }), // 전역으로 사용할 수 있도록 설정
-    TypeOrmModule.forRoot({
-      type: 'mariadb',
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT, 10),
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
-      entities: [Mart, Post,Image], // 엔티티 클래스 배열
-      synchronize: true, // 개발환경에서만 사용
-      autoLoadEntities: true, // 엔티티 자동 로드
-      connectTimeout: 10000,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: `src/config/env/.env.${process.env.NODE_ENV || 'development'}`,
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: () => {
+        return {
+          type: 'mariadb',
+          host: process.env.DB_HOST,
+          port: parseInt(process.env.DB_PORT, 10),
+          username: process.env.DB_USERNAME,
+          password: process.env.DB_PASSWORD,
+          database: process.env.DB_DATABASE,
+          entities: [Mart, Post, Image],
+          synchronize: true,
+          autoLoadEntities: true,
+          connectTimeout: 10000,
+        };
+      },
     }),
     MartsModule,
     PostsModule,

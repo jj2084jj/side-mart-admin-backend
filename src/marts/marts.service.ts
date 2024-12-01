@@ -5,31 +5,59 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Mart } from './entities/mart.entity';
 import { Repository } from 'typeorm';
 import { Post } from 'src/posts/entities/post.entity';
-import { Image } from 'src/posts/entities/image.entity';
+import { AwsService } from 'src/aws/aws.service';
+import { Image } from 'src/aws/entities/image.entity';
 
 @Injectable()
 export class MartsService {
-  // 구조 선언?
+  // 사용할 구조 선언
   constructor(
-    // 마트 구조 반환
     @InjectRepository(Mart)
     private readonly martRepository: Repository<Mart>,
 
-    // 게시글 구조 반환
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
 
     @InjectRepository(Image)
     private readonly imageRepository: Repository<Image>,
+
+    private readonly awsService: AwsService,
   ) {}
 
-  async create(createMartDto: CreateMartDto): Promise<Mart> {
-    const mart = this.martRepository.create({
-      ...createMartDto,
-      status: '1', // 고정된 값으로 설정
-    });
+  // 마트 생성
+  async create(
+    createMartDto: CreateMartDto,
+    files: Express.Multer.File[],
+  ): Promise<Mart> {
+    try {
+      // 마트 생성
+      const mart = this.martRepository.create({
+        ...createMartDto,
+        status: '1',
+      });
 
-    return this.martRepository.save(mart);
+      const saveMart = await this.martRepository.save(mart);
+
+      // 추가 이미지들 업로드
+      if (files && files.length > 0) {
+        const uploadPromises = files.map(async (file) => {
+          const uploadResult = await this.awsService.uploadFile(file);
+
+          const image = this.imageRepository.create({
+            url: uploadResult.url,
+            martId: saveMart.id,
+          });
+
+          return this.imageRepository.save(image);
+        });
+
+        await Promise.all(uploadPromises);
+      }
+
+      return { ...saveMart };
+    } catch (error) {
+      throw new Error(`마트 생성 중 오류 발생: ${error.message}`);
+    }
   }
 
   async findAll(
@@ -39,6 +67,7 @@ export class MartsService {
     const [result, total] = await this.martRepository.findAndCount({
       skip: (page - 1) * pageSize,
       take: pageSize,
+      relations: { images: true },
     });
     return { result, total };
   }
@@ -46,23 +75,26 @@ export class MartsService {
   async findOne(id: number): Promise<Mart> {
     const mart = await this.martRepository.findOne({
       where: { id },
+      relations: {
+        images: true,
+      },
     });
 
     const posts = await this.postRepository.find({
       where: {
-        mart: { id: id }
+        mart: { id: id },
       },
-      relations: ['images'], // 관련 데이터도 함께 로드
+      relations: { images: true },
       order: {
-        createdDate: 'DESC' // 최신순 정렬
-      }
+        createdDate: 'DESC', // 최신순 정렬
+      },
     });
 
     if (!mart) {
       throw new NotFoundException(`Mart with ID ${id} not found`);
     }
 
-    return { ...mart, posts:posts };
+    return { ...mart, posts: posts };
   }
 
   async update(id: number, updateMartDto: UpdateMartDto): Promise<Mart> {
@@ -92,13 +124,15 @@ export class MartsService {
 
   async delete(id: number): Promise<void> {
     try {
-      await this.imageRepository.delete({ post: { mart: { id } } });
+      await this.imageRepository.delete({ martId: id });
 
       await this.postRepository.delete({ mart: { id } });
 
       const result = await this.martRepository.delete(id);
       if (result.affected === 0) {
-        throw new NotFoundException(`해당하는 마트 ${id}값이 존재하지 않습니다.`);
+        throw new NotFoundException(
+          `해당하는 마트 ${id}값이 존재하지 않습니다.`,
+        );
       }
     } catch (error) {
       console.log('마트 삭제 실패:', error);

@@ -18,7 +18,10 @@ import { CreateMartDto } from './dto/create-mart.dto';
 import { UpdateMartDto } from './dto/update-mart.dto';
 import { Mart } from './entities/mart.entity';
 import { MartsResponse } from './dto/marts.response.dto';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FilesInterceptor,
+} from '@nestjs/platform-express';
 
 @Controller('marts')
 export class MartsController {
@@ -26,20 +29,12 @@ export class MartsController {
 
   // 마트 생성
   @Post()
-  @UseInterceptors(FilesInterceptor('files'))
-  create(
+  @UseInterceptors(FilesInterceptor('images'))
+  async create(
     @Body() createMartDto: CreateMartDto,
-    @UploadedFiles() files: Array<Express.Multer.File>,
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
-    // 추후 다시 처리 예정
-    const fileUrls = files
-      ? files.length > 0 && files.map((file) => `/uploads/${file.filename}`)
-      : []; // 예: 파일 저장 경로 배열
-
-    // DTO에 파일 경로 배열 추가
-    const martData = { ...createMartDto, files: fileUrls };
-
-    return this.martsService.create(martData);
+    return this.martsService.create(createMartDto, files);
   }
 
   // 리스트 조회
@@ -52,7 +47,6 @@ export class MartsController {
       page,
       pageSize,
     );
-
     return {
       data: martList,
       length: total,

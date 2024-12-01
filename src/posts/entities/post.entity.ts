@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Image } from './image.entity';
+import { Image } from '../../aws/entities/image.entity';
 
 @Entity()
 export class Post {
@@ -16,7 +16,7 @@ export class Post {
   id: number; // post 고유 id
 
   @ManyToOne(() => Mart, (mart) => mart.posts, {
-    onDelete: 'CASCADE'
+    onDelete: 'CASCADE',
   })
   mart: Mart; // 마트와 연결
 
@@ -26,8 +26,8 @@ export class Post {
   @Column()
   endDate: string; // 전단 종료날짜
 
-  @OneToMany(() => Image, (image) => image.post, {
-    onDelete: 'CASCADE'
+  @OneToMany(() => Image, (image) => image.postId, {
+    onDelete: 'CASCADE',
   })
   images: Image[]; // 이미지 배열
 
