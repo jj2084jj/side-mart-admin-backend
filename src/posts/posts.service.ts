@@ -21,6 +21,12 @@ export class PostsService {
     private readonly awsService: AwsService,
   ) {}
 
+  /**
+   *
+   * @param file
+   * @param postId
+   * @returns
+   */
   async saveImage(file: Express.Multer.File, postId: number) {
     // 1. S3에 이미지 업로드
 
@@ -35,6 +41,12 @@ export class PostsService {
     return await this.imageRepository.save(image);
   }
 
+  /**
+   * 마트 전단정보 생성
+   * @param createPostDto
+   * @param files // 전단이미지들
+   * @returns
+   */
   async create(
     createPostDto: CreatePostDto,
     files: Express.Multer.File[],
@@ -45,9 +57,7 @@ export class PostsService {
       });
 
       if (!mart) {
-        throw new NotFoundException(
-          `Mart with ID ${createPostDto.martId} not found`,
-        );
+        throw new NotFoundException(`해당 마트가 존재하지 않습니다.`);
       }
 
       // 1. Post 생성
@@ -80,22 +90,50 @@ export class PostsService {
     }
   }
 
+  /**
+   * 마트id에 따른 전단정보 전체조회
+   * @param martId
+   * @returns
+   */
   async findAll(martId: number) {
     return this.postRepository.find({
       where: {
         mart: { id: martId },
       },
-      relations: ['images', 'mart'], // 관련 데이터도 함께 로드
+      relations: { images: true, mart: true }, // 관련 데이터도 함께 로드
       order: {
         createdDate: 'DESC', // 최신순 정렬
       },
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
+  /**
+   * postid 개별조회
+   * @param postId
+   * @returns
+   */
+  async findOne(postId: number) {
+    const posts = await this.postRepository.find({
+      where: { id: postId },
+      relations: { images: true },
+      order: {
+        createdDate: 'DESC', // 최신순 정렬
+      },
+    });
+
+    if (!posts) {
+      throw new NotFoundException('Post 가 존재하지 않습니다.');
+    }
+
+    return { data: posts };
   }
 
+  /**
+   *
+   * @param id 전단 id
+   * @param updatePostDto 업데이트 정보
+   * @returns
+   */
   update(id: number, updatePostDto: UpdatePostDto) {
     return `This action updates a #${id} post`;
   }
