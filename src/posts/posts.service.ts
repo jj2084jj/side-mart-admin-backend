@@ -22,26 +22,6 @@ export class PostsService {
   ) {}
 
   /**
-   *
-   * @param file
-   * @param postId
-   * @returns
-   */
-  async saveImage(file: Express.Multer.File, postId: number) {
-    // 1. S3에 이미지 업로드
-
-    const imageResult = await this.awsService.uploadFile(file);
-
-    // 2. 이미지 정보 DB 저장
-    const image = this.imageRepository.create({
-      url: imageResult.url,
-      postId: postId,
-    });
-
-    return await this.imageRepository.save(image);
-  }
-
-  /**
    * 마트 전단정보 생성
    * @param createPostDto
    * @param files // 전단이미지들

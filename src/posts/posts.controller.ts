@@ -32,21 +32,6 @@ export class PostsController {
   }
 
   /**
-   * 포스트 이미지 개별 업로드
-   * @param postId
-   * @param file
-   * @returns
-   */
-  @Post(':id/images')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadImage(
-    @Param('id') postId: number,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    return await this.postsService.saveImage(file, postId);
-  }
-
-  /**
    * 전단정보 생성
    * @param createPostDto
    * @param files
