@@ -74,6 +74,9 @@ export class MartsService {
       skip: (page - 1) * pageSize,
       take: pageSize,
       relations: { images: true },
+      order: {
+        createdDate: 'DESC',
+      },
     });
     return { result, total };
   }
