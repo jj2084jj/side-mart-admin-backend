@@ -54,7 +54,7 @@ export class MartsService {
         await Promise.all(uploadPromises);
       }
 
-      return { ...saveMart };
+      return saveMart;
     } catch (error) {
       throw new Error(`마트 생성 중 오류 발생: ${error.message}`);
     }
