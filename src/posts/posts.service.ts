@@ -49,32 +49,40 @@ export class PostsService {
 
       const savedPost = await this.postRepository.save(post);
 
-      
+      if (createPostDto.images.length > 0) {
+        const regex = /\.(png|jpe?g)$/i; // .png, .jpg, .jpeg 확장자 필터링
+        const userGex = /(profile_default|zoom_out)/i; // .png, .jpg, .jpeg 확장자 필터링
+        const imageUrls = createPostDto.images.filter(
+          (text) => regex.test(text) && !userGex.test(text),
+        );
+
+        const uploadPromises = imageUrls.map(async (file) => {
+          const uploadResult = await this.awsService.saveAndUploadImage(file);
+          const image = this.imageRepository.create({
+            url: uploadResult.url,
+            postId: savedPost.id,
+          });
+          this.imageRepository.save(image);
+
+          return;
+        });
+        await Promise.all(uploadPromises);
+      }
+
       // 2. 이미지 업로드 및 저장
       if (files && files.length > 0) {
         const uploadPromises = files.map(async (file) => {
-          if (typeof file !== 'string') {
-            const uploadResult = await this.awsService.uploadFile(file);
-            const image = this.imageRepository.create({
-              url: uploadResult.url,
-              postId: savedPost.id,
-            });
-            return this.imageRepository.save(image);
-          }else {
-            const uploadResult = await this.awsService.uploadFile(file as any);
-            const image = this.imageRepository.create({
-              url: uploadResult.url,
-              postId: savedPost.id,
-            });
-            return this.imageRepository.save(image);
-          }
+          const uploadResult = await this.awsService.uploadFile(file);
+          const image = this.imageRepository.create({
+            url: uploadResult.url,
+            postId: savedPost.id,
+          });
+          return this.imageRepository.save(image);
         });
 
         await Promise.all(uploadPromises);
       }
 
-
-      
       return savedPost;
     } catch (error) {
       console.error('Service error:', error);
@@ -127,9 +135,10 @@ export class PostsService {
    * @returns
    */
   async update(id: number, updatePostDto: UpdatePostDto) {
+    const { images, ...updateData } = updatePostDto;
     const post = await this.postRepository.preload({
       id,
-      ...updatePostDto,
+      ...updateData,
     });
 
     if (!post) {

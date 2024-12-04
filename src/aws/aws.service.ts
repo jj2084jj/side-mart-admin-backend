@@ -38,10 +38,7 @@ export class AwsService {
     }
   }
 
-  async saveImageFromUrl(
-    imageUrl: string,
-    saveDirectory: string,
-  ): Promise<string> {
+  async saveImageFromUrl(imageUrl: string): Promise<string> {
     try {
       // 1. 이미지 URL로부터 다운로드
       const response = await fetch(imageUrl);
@@ -54,30 +51,22 @@ export class AwsService {
       const fileName = path.basename(imageUrl);
 
       // 3. 파일 경로 설정
-      const filePath = path.join(saveDirectory, fileName);
+      const filePath = path.join(fileName);
 
       // 4. 이미지 파일을 로컬 파일 시스템에 저장
       fs.writeFileSync(filePath, buffer);
-
-      console.log(`Image successfully saved to: ${filePath}`);
-
       return filePath; // 저장된 파일 경로를 반환
     } catch (error) {
-      console.error('Failed to download and save image:', error);
       throw new Error('Failed to download and save image');
     }
   }
 
   async saveAndUploadImage(imageUrl: string) {
-    const saveDirectory = './images'; // 저장할 디렉토리
-    const savedImagePath = await this.saveImageFromUrl(imageUrl, saveDirectory);
-
-    // savedImagePath를 이용해 S3에 업로드하거나 다른 처리를 할 수 있습니다.
-    console.log(`Image saved at ${savedImagePath}`);
+    const savedImagePath = await this.saveImageFromUrl(imageUrl);
 
     // 예시로 S3에 업로드하는 경우:
     const uploadedImage = await this.uploadToS3(savedImagePath); // S3에 업로드하는 함수
-    console.log('Image uploaded to S3:', uploadedImage);
+    return uploadedImage;
   }
 
   async uploadToS3(filePath: string) {
@@ -95,6 +84,8 @@ export class AwsService {
 
     try {
       await this.s3Client.send(command);
+
+      fs.unlinkSync(filePath);
       return {
         url: `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
         key: key,
