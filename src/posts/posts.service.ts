@@ -29,7 +29,7 @@ export class PostsService {
    */
   async create(
     createPostDto: CreatePostDto,
-    files: Express.Multer.File[],
+    files: Express.Multer.File[] | string[],
   ): Promise<Post> {
     try {
       const mart = await this.martRepository.findOne({
@@ -49,20 +49,32 @@ export class PostsService {
 
       const savedPost = await this.postRepository.save(post);
 
+      
       // 2. 이미지 업로드 및 저장
       if (files && files.length > 0) {
         const uploadPromises = files.map(async (file) => {
-          const uploadResult = await this.awsService.uploadFile(file);
-          const image = this.imageRepository.create({
-            url: uploadResult.url,
-            postId: savedPost.id,
-          });
-          return this.imageRepository.save(image);
+          if (typeof file !== 'string') {
+            const uploadResult = await this.awsService.uploadFile(file);
+            const image = this.imageRepository.create({
+              url: uploadResult.url,
+              postId: savedPost.id,
+            });
+            return this.imageRepository.save(image);
+          }else {
+            const uploadResult = await this.awsService.uploadFile(file as any);
+            const image = this.imageRepository.create({
+              url: uploadResult.url,
+              postId: savedPost.id,
+            });
+            return this.imageRepository.save(image);
+          }
         });
 
         await Promise.all(uploadPromises);
       }
 
+
+      
       return savedPost;
     } catch (error) {
       console.error('Service error:', error);
