@@ -54,4 +54,7 @@ export class Mart {
 
   @Column({ nullable: true })
   logoColorCode: string; // 로고 컬러 코드
+
+  @Column({ nullable: true })
+  logoImage: string; // 로고 이미지 URL
 }

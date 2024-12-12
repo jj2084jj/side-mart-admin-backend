@@ -28,9 +28,10 @@ describe('AppController', () => {
         posts: [],
         description: '',
         images: [],
-        logoColorCode: '', // 추가
-        createdDate: new Date(), // 수정된 날짜 객체
-        updatedDate: new Date(), // 수정된 날짜 객체
+        logoColorCode: '',
+        logoImage: '',
+        createdDate: new Date(),
+        updatedDate: new Date(),
       };
 
       // `appController.getList()`의 반환값과 `expectedMart`를 비교

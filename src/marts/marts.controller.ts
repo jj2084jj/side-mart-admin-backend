@@ -69,18 +69,21 @@ export class MartsController {
    * @returns
    */
   @Patch(':id')
-  @HttpCode(HttpStatus.OK) // HTTP 상태 코드를 200으로 설정
+  @UseInterceptors(FilesInterceptor('images'))
+  @HttpCode(HttpStatus.OK)
   async update(
     @Param('id') id: number,
     @Body() updateMartDto: UpdateMartDto,
+    @UploadedFiles() files: Express.Multer.File[],
   ): Promise<{ message: string }> {
     try {
-      await this.martsService.update(id, updateMartDto);
+      await this.martsService.update(id, updateMartDto, files);
       return {
         message: `success`,
       };
     } catch (error) {
-      throw new NotFoundException('업데이트에 실패했습니다.');
+      console.error('Update error:', error);
+      throw new NotFoundException('업데이트에 실패했습니다: ' + error.message);
     }
   }
 

@@ -18,8 +18,9 @@ export class AppService {
       hours: 'ㅇㅇ',
       description: '',
       images: [],
-      logoColorCode: null, // 추가
-      createdDate: new Date(), // 현재 시간을 설정
+      logoColorCode: null,
+      logoImage: '',
+      createdDate: new Date(),
       updatedDate: new Date(),
     };
   }

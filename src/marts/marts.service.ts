@@ -40,8 +40,14 @@ export class MartsService {
 
       // 추가 이미지들 업로드
       if (files && files.length > 0) {
-        const uploadPromises = files.map(async (file) => {
+        const uploadPromises = files.map(async (file, index) => {
           const uploadResult = await this.awsService.uploadFile(file);
+
+          // 첫 번째 이미지를 로고 이미지로 설정
+          if (index === 0) {
+            saveMart.logoImage = uploadResult.url;
+            await this.martRepository.save(saveMart);
+          }
 
           const image = this.imageRepository.create({
             url: uploadResult.url,
@@ -69,7 +75,7 @@ export class MartsService {
   async findAll(
     page: number = 1,
     pageSize: number = 10,
-  ): Promise<{ result: Mart[]; total: number }> {
+  ): Promise<{ result: any[]; total: number }> {
     const [result, total] = await this.martRepository.findAndCount({
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -78,6 +84,7 @@ export class MartsService {
         createdDate: 'DESC',
       },
     });
+
     return { result, total };
   }
 
@@ -94,30 +101,19 @@ export class MartsService {
       },
     });
 
-    let posts = await this.postRepository.find({
-      where: {
-        mart: { id: id },
-      },
-      relations: { images: true },
-      order: {
-        createdDate: 'DESC', // 최신순 정렬
-      },
-    });
-
-    // endDate가 현재 날짜 이후인 항목만 필터링
-    const currentDate = new Date();
-    posts = posts.filter((post) => {
-      const endDate = post.endDate ? new Date(post.endDate) : null;
-      return !endDate || endDate >= currentDate;
-    });
-
     if (!mart) {
       throw new NotFoundException(
         `해당하는 마트가 존재하지 않습니다. id: ${id}`,
       );
     }
 
-    return { ...mart, posts: posts };
+    // 이미지가 있으면 첫 번째 이미지를 로고 이미지로 설정
+    if (mart.images && mart.images.length > 0 && !mart.logoImage) {
+      mart.logoImage = mart.images[0].url;
+      await this.martRepository.save(mart);
+    }
+
+    return mart;
   }
 
   /**
@@ -126,19 +122,51 @@ export class MartsService {
    * @param updateMartDto
    * @returns
    */
-  async update(id: number, updateMartDto: UpdateMartDto): Promise<Mart> {
-    const mart = await this.martRepository.preload({
-      id,
-      ...updateMartDto,
+  async update(
+    id: number,
+    updateMartDto: UpdateMartDto,
+    files: Express.Multer.File[],
+  ): Promise<Mart> {
+    // 먼저 마트가 존재하는지 확인
+    const existingMart = await this.martRepository.findOne({
+      where: { id },
+      relations: ['images']
     });
 
-    if (!mart) {
+    if (!existingMart) {
       throw new NotFoundException(
         `해당하는 마트가 존재하지 않습니다. id: ${id}`,
       );
     }
 
-    return this.martRepository.save(mart);
+    // 업데이트할 데이터 병합
+    const updatedMart = {
+      ...existingMart,
+      ...updateMartDto
+    };
+
+    // 이미지 업로드 처리
+    if (files && files.length > 0) {
+      const uploadPromises = files.map(async (file, index) => {
+        const uploadResult = await this.awsService.uploadFile(file);
+
+        if (index === 0) {
+          updatedMart.logoImage = uploadResult.url;
+        }
+
+        const image = this.imageRepository.create({
+          url: uploadResult.url,
+          martId: id,
+        });
+
+        return this.imageRepository.save(image);
+      });
+
+      await Promise.all(uploadPromises);
+    }
+
+    // 변경된 데이터 저장
+    return await this.martRepository.save(updatedMart);
   }
 
   /**
