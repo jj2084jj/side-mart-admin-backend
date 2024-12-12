@@ -101,6 +101,16 @@ export class MartsService {
       },
     });
 
+    let posts = await this.postRepository.find({
+      where: {
+        mart: { id: id },
+      },
+      relations: { images: true },
+      order: {
+        createdDate: 'DESC', // 최신순 정렬
+      },
+    });
+
     if (!mart) {
       throw new NotFoundException(
         `해당하는 마트가 존재하지 않습니다. id: ${id}`,
@@ -113,7 +123,7 @@ export class MartsService {
       await this.martRepository.save(mart);
     }
 
-    return mart;
+    return { ...mart, posts: posts };
   }
 
   /**
@@ -130,7 +140,7 @@ export class MartsService {
     // 먼저 마트가 존재하는지 확인
     const existingMart = await this.martRepository.findOne({
       where: { id },
-      relations: ['images']
+      relations: ['images'],
     });
 
     if (!existingMart) {
@@ -142,7 +152,7 @@ export class MartsService {
     // 업데이트할 데이터 병합
     const updatedMart = {
       ...existingMart,
-      ...updateMartDto
+      ...updateMartDto,
     };
 
     // 이미지 업로드 처리
