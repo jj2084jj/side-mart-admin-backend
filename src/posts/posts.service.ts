@@ -49,7 +49,8 @@ export class PostsService {
 
       const savedPost = await this.postRepository.save(post);
 
-      if (createPostDto.images.length > 0) {
+      // 1. 크롤링 한 경우
+      if (createPostDto?.images && createPostDto.images.length > 0) {
         const regex = /\.(png|jpe?g)$/i; // .png, .jpg, .jpeg 확장자 필터링
         const userGex = /(profile_default|zoom_out)/i; // .png, .jpg, .jpeg 확장자 필터링
         const imageUrls = createPostDto.images.filter(
@@ -69,7 +70,7 @@ export class PostsService {
         await Promise.all(uploadPromises);
       }
 
-      // 2. 이미지 업로드 및 저장
+      // 2. 이미지 업로드 시 및 저장
       if (files && files.length > 0) {
         const uploadPromises = files.map(async (file) => {
           const uploadResult = await this.awsService.uploadFile(file);
