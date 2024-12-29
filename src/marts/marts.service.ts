@@ -76,7 +76,7 @@ export class MartsService {
     page: number = 1,
     pageSize: number = 10,
   ): Promise<{ result: any[]; total: number }> {
-    const [result, total] = await this.martRepository.findAndCount({
+    const [marts, total] = await this.martRepository.findAndCount({
       skip: (page - 1) * pageSize,
       take: pageSize,
       relations: { images: true },
@@ -84,6 +84,11 @@ export class MartsService {
         createdDate: 'DESC',
       },
     });
+
+    const result = marts.map((mart) => ({
+      ...mart,
+      logoImage: mart.images?.[0]?.url || null, // 첫 번째 이미지 URL을 가져오거나 없으면 null
+    }));
 
     return { result, total };
   }
